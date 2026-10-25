@@ -5,7 +5,7 @@ Minecraft server for Raspberry Pi 5 running in Docker.
 - `mc`: Minecraft server (port 25565)
 - `backups`: local backups every 6h, kept 7 days
 - `panel`: web admin panel (port 8080)
-- `backup-sync`: nightly upload to Google Drive, kept 30 days
+- `backup-sync`: nightly upload to Google Drive, kept 30 days, optional Discord alerts on failure
 
 ## Install
 
@@ -13,13 +13,15 @@ Requires Raspberry Pi OS Lite (64-bit) with SSH enabled.
 
 ```
 sudo apt install -y git
-git clone https://github.com/<user>/mc-stack.git
+git clone https://github.com/LasseRogers/mc-stack.git
 cd mc-stack
 bash setup-pi.sh
 ```
 
-`setup-pi.sh` installs Docker and log2ram, creates `.env`, connects Google
-Drive, optionally restores the latest world backup, then starts the stack.
+`setup-pi.sh` enables automatic security updates and a firewall (SSH only),
+installs Docker and log2ram, creates `.env`, asks for the Minecraft version,
+connects Google Drive, sets up optional Discord alerts, optionally restores the
+latest world backup, then starts the stack.
 
 - Minecraft: `<hostname>.local`
 - Panel: `http://<hostname>.local:8080`
@@ -49,6 +51,12 @@ lets shared users join the Minecraft server without reaching the panel.
 | Stop / start | `docker compose down` / `docker compose up -d` |
 | Update | `git pull && docker compose pull && docker compose up -d --build` |
 
-Backup intervals, retention and memory are set in `compose.yaml`.
+Backup intervals, retention and memory are set in `compose.yaml`. The
+Minecraft version (`MC_VERSION`) and Discord webhook (`DISCORD_WEBHOOK_URL`)
+are set in `.env`. Run `docker compose up -d` after changing either.
+
+`docker compose pull` updates images but not Minecraft itself, which stays on
+`MC_VERSION`. To upgrade, change `MC_VERSION` (worlds can't be downgraded, so
+take a backup first).
 
 `.env` and `config/rclone/` contain secrets and are git-ignored.
