@@ -45,6 +45,7 @@ lets shared users join the Minecraft server without reaching the panel.
 | Logs | `docker compose logs <service> --tail 50` |
 | Backup now | `docker compose exec backups backup now` |
 | Upload now | `docker compose exec backup-sync sync.sh` |
+| Restore a backup | `bash restore.sh` |
 | Stop / start | `docker compose down` / `docker compose up -d` |
 | Update | `git pull && docker compose pull && docker compose up -d --build` |
 
