@@ -18,7 +18,10 @@ step() { echo; echo "==> $*"; }
 
 # ------------------------------------------------------------- list backups
 
-mapfile -t local_files < <(ls -1 backups/ 2>/dev/null | grep -E '^world-.*\.tar\.gz$' || true)
+local_files=()
+for f in backups/world-*.tar.gz; do
+  [ -f "$f" ] && local_files+=("$(basename "$f")")
+done
 
 remote_files=()
 if grep -qs "^\[${REMOTE}\]" config/rclone/rclone.conf; then
@@ -65,9 +68,14 @@ case "$a" in [Yy]*) ;; *) echo "cancelled"; exit 0 ;; esac
 # ------------------------------------------------------------------ restore
 
 step "[1/4] Backing up the current world"
-before="$(ls -1t backups/world-*.tar.gz 2>/dev/null | head -n 1 || true)"
+newest_local() {
+  local f newest=""
+  for f in backups/world-*.tar.gz; do [ -f "$f" ] && newest="$f"; done
+  echo "$newest"
+}
+before="$(newest_local)"
 if "${DC[@]}" exec -T backups backup now; then
-  after="$(ls -1t backups/world-*.tar.gz 2>/dev/null | head -n 1 || true)"
+  after="$(newest_local)"
   if [ -n "$after" ] && [ "$after" != "$before" ]; then
     safety="$(basename "$after")"
     echo "saved as ${safety}"
@@ -89,6 +97,8 @@ fi
 
 step "[3/4] Replacing the world"
 "${DC[@]}" stop mc backups
+# Single quotes on purpose: this script runs inside the container.
+# shellcheck disable=SC2016
 "${DC[@]}" run --rm --no-deps -T -v "$PWD/backups:/restore:ro" --entrypoint sh mc -c '
   set -e
   L="$(sed -n "s/^level-name=//p" /data/server.properties 2>/dev/null)"

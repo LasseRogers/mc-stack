@@ -19,7 +19,11 @@ if ! flock -n 9; then
 fi
 
 # Alert when local backups have stopped (backups service down or failing).
-newest="$(ls -1t "$SRC"/*.tar.gz 2>/dev/null | head -n 1 || true)"
+# Names contain the timestamp, so the last match is the newest.
+newest=""
+for f in "$SRC"/world-*.tar.gz; do
+  [ -f "$f" ] && newest="$f"
+done
 if [ -z "$newest" ]; then
   log "no local backups in ${SRC}"
   alert.sh "no local backups found in ${SRC}" || true
