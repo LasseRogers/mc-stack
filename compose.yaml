@@ -75,6 +75,7 @@ services:
       SYNC_SCHEDULE: "0 3 * * *"               # cron
       REMOTE_KEEP_DAYS: "30"                   # 0 = keep forever
       SYNC_ON_START: "true"
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:-}  # optional
     volumes:
       - ./backups:/backups:ro
       - ./config/rclone:/config/rclone

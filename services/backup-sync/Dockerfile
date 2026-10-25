@@ -17,8 +17,8 @@ RUN set -eu; \
     echo "${SHA1}  /usr/local/bin/supercronic" | sha1sum -c -; \
     chmod +x /usr/local/bin/supercronic
 
-COPY entrypoint.sh sync.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/sync.sh
+COPY entrypoint.sh sync.sh alert.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/sync.sh /usr/local/bin/alert.sh
 
 ENV RCLONE_CONFIG=/config/rclone/rclone.conf
 

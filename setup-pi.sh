@@ -21,7 +21,7 @@ rclone_run() {
   sudo docker run --rm "$@"
 }
 
-step "[1/9] System update"
+step "[1/10] System update"
 sudo apt-get update
 sudo DEBIAN_FRONTEND=noninteractive apt-get full-upgrade -y
 sudo apt-get install -y curl rsync openssl python3
@@ -30,7 +30,7 @@ printf 'APT::Periodic::Update-Package-Lists "1";\nAPT::Periodic::Unattended-Upgr
   | sudo tee /etc/apt/apt.conf.d/20auto-upgrades >/dev/null
 echo "automatic security updates enabled"
 
-step "[2/9] Docker"
+step "[2/10] Docker"
 if command -v docker >/dev/null 2>&1; then
   echo "already installed"
 else
@@ -38,7 +38,7 @@ else
 fi
 sudo usermod -aG docker "$USER"
 
-step "[3/9] log2ram"
+step "[3/10] log2ram"
 if systemctl list-unit-files log2ram.service 2>/dev/null | grep -q '^log2ram.service'; then
   echo "already installed"
 else
@@ -48,7 +48,7 @@ else
   rm -rf "$tmp"
 fi
 
-step "[4/9] Firewall"
+step "[4/10] Firewall"
 # Docker publishes container ports past ufw, so this covers host services
 # (SSH etc.) only. Container ports are controlled in compose.yaml.
 sudo apt-get install -y ufw
@@ -63,7 +63,7 @@ sudo ufw status verbose
 
 mkdir -p backups config/rclone
 
-step "[5/9] .env"
+step "[5/10] .env"
 if [ -f .env ]; then
   echo "exists, skipping"
 else
@@ -86,7 +86,7 @@ EOF
   echo "written (mode 600)"
 fi
 
-step "[6/9] Minecraft version"
+step "[6/10] Minecraft version"
 if grep -q '^MC_VERSION=' .env; then
   echo "pinned: $(grep '^MC_VERSION=' .env | cut -d= -f2)"
 else
@@ -107,7 +107,7 @@ sys.exit(0 if any(x["id"] == sys.argv[1] and x["type"] == "release" for x in d["
   echo "pinned: ${v}"
 fi
 
-step "[7/9] Google Drive"
+step "[7/10] Google Drive"
 if grep -qs "^\[${REMOTE}\]" config/rclone/rclone.conf; then
   echo "already configured"
 elif ask "Configure now?"; then
@@ -131,7 +131,33 @@ else
   echo "skipped (re-run to configure)"
 fi
 
-step "[8/9] World data"
+step "[8/10] Backup alerts"
+if grep -q '^DISCORD_WEBHOOK_URL=' .env; then
+  if grep -q '^DISCORD_WEBHOOK_URL=.' .env; then
+    echo "already configured"
+  else
+    echo "disabled (set DISCORD_WEBHOOK_URL in .env to enable)"
+  fi
+else
+  while true; do
+    read -rp "Discord webhook URL for backup alerts (Enter to skip): " hook
+    [ -z "$hook" ] && break
+    case "$hook" in
+      https://discord.com/api/webhooks/*|https://discordapp.com/api/webhooks/*) ;;
+      *) echo "not a Discord webhook URL"; continue ;;
+    esac
+    if curl -fsS --max-time 15 -H "Content-Type: application/json" \
+         -d '{"content":"mc-stack: test alert from setup-pi.sh"}' "$hook" >/dev/null; then
+      echo "test message sent"
+      break
+    fi
+    echo "test message failed, check the URL"
+  done
+  echo "DISCORD_WEBHOOK_URL=${hook}" >> .env
+  [ -n "$hook" ] && echo "enabled" || echo "skipped"
+fi
+
+step "[9/10] World data"
 if sudo docker volume inspect "$VOLUME" >/dev/null 2>&1; then
   echo "volume exists, skipping"
 elif grep -qs "^\[${REMOTE}\]" config/rclone/rclone.conf; then
@@ -151,7 +177,7 @@ else
   echo "no restore, new world"
 fi
 
-step "[9/9] Start"
+step "[10/10] Start"
 sudo docker compose up -d --build
 
 echo
