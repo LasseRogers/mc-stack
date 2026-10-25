@@ -1,0 +1,20 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  panel:
+    name: Panel tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install dependencies
+        run: |
+          python3 -m venv .venv
+          .venv/bin/pip install -r services/admin-panel/requirements-dev.txt
+
+      - name: Run tests
+        run: .venv/bin/pytest services/admin-panel
