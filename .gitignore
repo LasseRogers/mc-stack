@@ -8,3 +8,5 @@ backups/
 # Python
 __pycache__/
 .idea/
+.venv/
+.pytest_cache/
