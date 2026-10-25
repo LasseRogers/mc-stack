@@ -49,6 +49,7 @@ services:
 
   panel:
     build: ./services/admin-panel
+    user: "1000:1000"   # same owner as the server data and backups/
     depends_on:
       mc:
         condition: service_healthy
@@ -58,8 +59,10 @@ services:
       RCON_PASSWORD: ${RCON_PASSWORD}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       SECRET_KEY: ${PANEL_SECRET_KEY}
+      TZ: ${SERVER_TZ:-UTC}
     volumes:
       - mc-data:/data:ro
+      - ./backups:/backups
     ports:
       - "8080:8080"
     logging: *logging

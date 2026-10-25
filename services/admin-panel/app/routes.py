@@ -3,7 +3,7 @@ import re
 
 from flask import abort, flash, redirect, render_template, request, url_for
 
-from . import rcon_client, server_files
+from . import backup, rcon_client, server_files
 from .auth import login_required
 
 # Also guards against RCON command injection.
@@ -22,7 +22,6 @@ PLAYER_ACTIONS = {
 SERVER_ACTIONS = {
     "whitelist_on": "whitelist on",
     "whitelist_off": "whitelist off",
-    "save": "save-all",
     "day": "time set day",
     "clear_weather": "weather clear",
 }
@@ -52,6 +51,8 @@ def register(app):
             whitelist=server_files.whitelist(),
             whitelist_on=server_files.whitelist_enabled(),
             banned=server_files.banned(),
+            backup_status=backup.status(),
+            latest_backup=backup.latest(),
         )
 
     @app.route("/action", methods=["POST"])
@@ -67,6 +68,12 @@ def register(app):
             command = PLAYER_ACTIONS[name].format(p=player)
         elif name in SERVER_ACTIONS:
             command = SERVER_ACTIONS[name]
+        elif name == "backup":
+            if backup.start():
+                flash("Backup started.", "ok")
+            else:
+                flash("A backup is already running.", "error")
+            return redirect(url_for("index"))
         elif name == "say":
             message = clean_message(request.form.get("message", ""))
             if not message:

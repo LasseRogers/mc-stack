@@ -82,8 +82,14 @@
       <input type="text" name="message" placeholder="Server restarting in 5 minutes" maxlength="256" required>
       <button type="submit">Broadcast</button>
     </form>
+    <p class="muted" style="margin: 0 0 10px;">
+      {% if backup_status.running %}Backup in progress…
+      {% elif backup_status.error %}Last backup failed: {{ backup_status.error }}
+      {% elif latest_backup %}{% set mins = (latest_backup[1] // 60)|int %}Latest backup: {{ latest_backup[0] }} ({% if mins < 60 %}{{ mins }} min{% else %}{{ mins // 60 }}h{% endif %} ago)
+      {% else %}No backups yet.{% endif %}
+    </p>
     <div class="btns actions">
-      {{ server_action("save", "Save world") }}
+      {{ server_action("backup", "Create backup") }}
       {{ server_action("day", "Set day") }}
       {{ server_action("clear_weather", "Clear weather") }}
     </div>
@@ -99,4 +105,7 @@
   </section>
 </div>
 <p class="muted" style="margin-top: 16px;">Lists update when you reload the page or run an action.</p>
+{% if backup_status.running %}
+<script>setTimeout(function () { location.reload(); }, 5000);</script>
+{% endif %}
 {% endblock %}

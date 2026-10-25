@@ -12,6 +12,9 @@ SECRET_KEY = os.environ["SECRET_KEY"]
 # Server data volume (read-only).
 DATA_DIR = Path(os.environ.get("DATA_DIR", "/data"))
 
+# Shared with the backups service (writable).
+BACKUP_DIR = Path(os.environ.get("BACKUP_DIR", "/backups"))
+
 # Per-IP login lockout.
 MAX_LOGIN_FAILURES = 5
 LOCKOUT_SECONDS = 15 * 60
