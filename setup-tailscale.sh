@@ -25,6 +25,11 @@ else
   sudo tailscale up
 fi
 
+if command -v ufw >/dev/null 2>&1 && sudo ufw status | grep -q "Status: active"; then
+  sudo ufw allow in on tailscale0 comment tailscale
+  echo "ufw: allowed incoming on tailscale0"
+fi
+
 name="$(hostname)"
 ip="$(tailscale ip -4 2>/dev/null | head -n 1)"
 

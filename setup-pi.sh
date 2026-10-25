@@ -21,7 +21,7 @@ rclone_run() {
   sudo docker run --rm "$@"
 }
 
-step "[1/8] System update"
+step "[1/9] System update"
 sudo apt-get update
 sudo DEBIAN_FRONTEND=noninteractive apt-get full-upgrade -y
 sudo apt-get install -y curl rsync openssl python3
@@ -30,7 +30,7 @@ printf 'APT::Periodic::Update-Package-Lists "1";\nAPT::Periodic::Unattended-Upgr
   | sudo tee /etc/apt/apt.conf.d/20auto-upgrades >/dev/null
 echo "automatic security updates enabled"
 
-step "[2/8] Docker"
+step "[2/9] Docker"
 if command -v docker >/dev/null 2>&1; then
   echo "already installed"
 else
@@ -38,7 +38,7 @@ else
 fi
 sudo usermod -aG docker "$USER"
 
-step "[3/8] log2ram"
+step "[3/9] log2ram"
 if systemctl list-unit-files log2ram.service 2>/dev/null | grep -q '^log2ram.service'; then
   echo "already installed"
 else
@@ -48,9 +48,22 @@ else
   rm -rf "$tmp"
 fi
 
+step "[4/9] Firewall"
+# Docker publishes container ports past ufw, so this covers host services
+# (SSH etc.) only. Container ports are controlled in compose.yaml.
+sudo apt-get install -y ufw
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow 22/tcp comment ssh
+if ip link show tailscale0 >/dev/null 2>&1; then
+  sudo ufw allow in on tailscale0 comment tailscale
+fi
+sudo ufw --force enable
+sudo ufw status verbose
+
 mkdir -p backups config/rclone
 
-step "[4/8] .env"
+step "[5/9] .env"
 if [ -f .env ]; then
   echo "exists, skipping"
 else
@@ -73,7 +86,7 @@ EOF
   echo "written (mode 600)"
 fi
 
-step "[5/8] Minecraft version"
+step "[6/9] Minecraft version"
 if grep -q '^MC_VERSION=' .env; then
   echo "pinned: $(grep '^MC_VERSION=' .env | cut -d= -f2)"
 else
@@ -94,7 +107,7 @@ sys.exit(0 if any(x["id"] == sys.argv[1] and x["type"] == "release" for x in d["
   echo "pinned: ${v}"
 fi
 
-step "[6/8] Google Drive"
+step "[7/9] Google Drive"
 if grep -qs "^\[${REMOTE}\]" config/rclone/rclone.conf; then
   echo "already configured"
 elif ask "Configure now?"; then
@@ -118,7 +131,7 @@ else
   echo "skipped (re-run to configure)"
 fi
 
-step "[7/8] World data"
+step "[8/9] World data"
 if sudo docker volume inspect "$VOLUME" >/dev/null 2>&1; then
   echo "volume exists, skipping"
 elif grep -qs "^\[${REMOTE}\]" config/rclone/rclone.conf; then
@@ -138,7 +151,7 @@ else
   echo "no restore, new world"
 fi
 
-step "[8/8] Start"
+step "[9/9] Start"
 sudo docker compose up -d --build
 
 echo
