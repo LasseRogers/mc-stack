@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% macro player_action(action, player, label, cls="") -%}
+<form method="post" action="{{ url_for('action') }}">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <input type="hidden" name="action" value="{{ action }}">
+  <input type="hidden" name="player" value="{{ player }}">
+  <button type="submit" class="{{ cls }}">{{ label }}</button>
+</form>
+{%- endmacro %}
+
+{% macro server_action(action, label) -%}
+<form method="post" action="{{ url_for('action') }}">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <input type="hidden" name="action" value="{{ action }}">
+  <button type="submit">{{ label }}</button>
+</form>
+{%- endmacro %}
+
+{% block content %}
+<header>
+  <div class="title">
+    <h1>Server admin</h1>
+    {% if server_up %}<span class="pill ok">Online</span>{% else %}<span class="pill err">Offline</span>{% endif %}
+  </div>
+  <form method="post" action="{{ url_for('logout') }}">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <button type="submit">Log out</button>
+  </form>
+</header>
+
+<div class="stats">
+  <div class="stat"><div class="label">Players online</div>
+    <div class="value">{% if server_up %}{{ count }} / {{ max_players }}{% else %}–{% endif %}</div></div>
+  <div class="stat"><div class="label">Whitelisted</div><div class="value">{{ whitelist|length }}</div></div>
+  <div class="stat"><div class="label">Whitelist</div>
+    <div class="value">{% if whitelist_on is none %}?{% elif whitelist_on %}On{% else %}Off{% endif %}</div></div>
+</div>
+
+<div class="grid">
+  <section class="card">
+    <h2>Online now</h2>
+    {% for p in online %}
+      <div class="row">
+        <span>{{ p }}{% if p|lower in ops %}<span class="pill op">op</span>{% endif %}</span>
+        <span class="btns">
+          {{ player_action("kick", p, "Kick") }}
+          {{ player_action("ban", p, "Ban", "danger") }}
+          {% if p|lower in ops %}{{ player_action("deop", p, "Deop") }}{% else %}{{ player_action("op", p, "Op") }}{% endif %}
+        </span>
+      </div>
+    {% else %}
+      <p class="muted">{% if server_up %}Nobody's online right now.{% else %}Can't reach the server.{% endif %}</p>
+    {% endfor %}
+  </section>
+
+  <section class="card">
+    <div class="row" style="border-top: 0; padding-top: 0;">
+      <h2 style="margin: 0;">Whitelist</h2>
+      {% if whitelist_on %}{{ server_action("whitelist_off", "Turn off") }}{% else %}{{ server_action("whitelist_on", "Turn on") }}{% endif %}
+    </div>
+    <form method="post" action="{{ url_for('action') }}" class="inline">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <input type="hidden" name="action" value="whitelist_add">
+      <input type="text" name="player" placeholder="Minecraft username" pattern="[A-Za-z0-9_]{3,16}" required>
+      <button type="submit">Add</button>
+    </form>
+    {% for p in whitelist %}
+      <div class="row"><span>{{ p }}</span>{{ player_action("whitelist_remove", p, "Remove", "danger") }}</div>
+    {% else %}
+      <p class="muted">No one is whitelisted yet.</p>
+    {% endfor %}
+  </section>
+</div>
+
+<div class="grid" style="margin-top: 12px;">
+  <section class="card">
+    <h2>Quick actions</h2>
+    <form method="post" action="{{ url_for('action') }}" class="inline">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <input type="hidden" name="action" value="say">
+      <input type="text" name="message" placeholder="Server restarting in 5 minutes" maxlength="256" required>
+      <button type="submit">Broadcast</button>
+    </form>
+    <div class="btns actions">
+      {{ server_action("save", "Save world") }}
+      {{ server_action("day", "Set day") }}
+      {{ server_action("clear_weather", "Clear weather") }}
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Banned players</h2>
+    {% for p in banned %}
+      <div class="row"><span>{{ p }}</span>{{ player_action("pardon", p, "Unban") }}</div>
+    {% else %}
+      <p class="muted">No banned players.</p>
+    {% endfor %}
+  </section>
+</div>
+<p class="muted" style="margin-top: 16px;">Lists update when you reload the page or run an action.</p>
+{% endblock %}

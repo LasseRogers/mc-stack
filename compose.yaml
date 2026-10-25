@@ -1,0 +1,84 @@
+# Pin the project name so the volume name doesn't depend on the directory.
+name: mc-stack
+
+# Cap container logs (SD card wear).
+x-logging: &logging
+  driver: local
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  mc:
+    image: itzg/minecraft-server
+    ports:
+      - "25565:25565"
+    environment:
+      EULA: "TRUE"
+      MEMORY: "2G"
+      TZ: Europe/Copenhagen
+      RCON_PASSWORD: ${RCON_PASSWORD}
+    volumes:
+      - mc-data:/data
+    healthcheck:
+      test: ["CMD", "mc-health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 5m
+    logging: *logging
+    restart: unless-stopped
+
+  backups:
+    image: itzg/mc-backup
+    depends_on:
+      mc:
+        condition: service_healthy
+    environment:
+      TZ: Europe/Copenhagen
+      RCON_HOST: mc
+      RCON_PASSWORD: ${RCON_PASSWORD}
+      BACKUP_INTERVAL: "6h"
+      PRUNE_BACKUPS_DAYS: "7"
+    volumes:
+      - mc-data:/data:ro
+      - ./backups:/backups
+    logging: *logging
+    restart: unless-stopped
+
+  panel:
+    build: ./services/admin-panel
+    depends_on:
+      mc:
+        condition: service_healthy
+    environment:
+      RCON_HOST: mc
+      RCON_PORT: "25575"
+      RCON_PASSWORD: ${RCON_PASSWORD}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      SECRET_KEY: ${PANEL_SECRET_KEY}
+    volumes:
+      - mc-data:/data:ro
+    ports:
+      - "8080:8080"
+    logging: *logging
+    restart: unless-stopped
+
+  backup-sync:
+    build: ./services/backup-sync
+    depends_on:
+      - backups
+    environment:
+      TZ: Europe/Copenhagen
+      SYNC_DEST: "offsite:minecraft-backups"   # remote:path
+      SYNC_SCHEDULE: "0 3 * * *"               # cron
+      REMOTE_KEEP_DAYS: "30"                   # 0 = keep forever
+      SYNC_ON_START: "true"
+    volumes:
+      - ./backups:/backups:ro
+      - ./config/rclone:/config/rclone
+    logging: *logging
+    restart: unless-stopped
+
+volumes:
+  mc-data:

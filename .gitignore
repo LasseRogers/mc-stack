@@ -1,0 +1,10 @@
+# Secrets
+.env
+config/rclone/
+
+# Local world backups (large, and already copied to Google Drive)
+backups/
+
+# Python
+__pycache__/
+.idea/
