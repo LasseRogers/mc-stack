@@ -25,6 +25,10 @@ step "[1/8] System update"
 sudo apt-get update
 sudo DEBIAN_FRONTEND=noninteractive apt-get full-upgrade -y
 sudo apt-get install -y curl rsync openssl python3
+sudo apt-get install -y unattended-upgrades
+printf 'APT::Periodic::Update-Package-Lists "1";\nAPT::Periodic::Unattended-Upgrade "1";\n' \
+  | sudo tee /etc/apt/apt.conf.d/20auto-upgrades >/dev/null
+echo "automatic security updates enabled"
 
 step "[2/8] Docker"
 if command -v docker >/dev/null 2>&1; then
