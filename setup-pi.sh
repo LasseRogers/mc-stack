@@ -21,12 +21,12 @@ rclone_run() {
   sudo docker run --rm "$@"
 }
 
-step "[1/7] System update"
+step "[1/8] System update"
 sudo apt-get update
 sudo DEBIAN_FRONTEND=noninteractive apt-get full-upgrade -y
-sudo apt-get install -y curl rsync openssl
+sudo apt-get install -y curl rsync openssl python3
 
-step "[2/7] Docker"
+step "[2/8] Docker"
 if command -v docker >/dev/null 2>&1; then
   echo "already installed"
 else
@@ -34,7 +34,7 @@ else
 fi
 sudo usermod -aG docker "$USER"
 
-step "[3/7] log2ram"
+step "[3/8] log2ram"
 if systemctl list-unit-files log2ram.service 2>/dev/null | grep -q '^log2ram.service'; then
   echo "already installed"
 else
@@ -46,7 +46,7 @@ fi
 
 mkdir -p backups config/rclone
 
-step "[4/7] .env"
+step "[4/8] .env"
 if [ -f .env ]; then
   echo "exists, skipping"
 else
@@ -69,7 +69,28 @@ EOF
   echo "written (mode 600)"
 fi
 
-step "[5/7] Google Drive"
+step "[5/8] Minecraft version"
+if grep -q '^MC_VERSION=' .env; then
+  echo "pinned: $(grep '^MC_VERSION=' .env | cut -d= -f2)"
+else
+  manifest="$(curl -fsSL https://piston-meta.mojang.com/mc/game/version_manifest_v2.json)"
+  mc_latest="$(python3 -c 'import json,sys; print(json.load(sys.stdin)["latest"]["release"])' <<<"$manifest")"
+  while true; do
+    read -rp "Minecraft version [${mc_latest}] (or 'latest' to auto-update): " v
+    v="${v:-$mc_latest}"
+    if [ "${v,,}" = "latest" ]; then v=LATEST; break; fi
+    if python3 -c '
+import json, sys
+d = json.load(sys.stdin)
+sys.exit(0 if any(x["id"] == sys.argv[1] and x["type"] == "release" for x in d["versions"]) else 1)
+' "$v" <<<"$manifest"; then break; fi
+    echo "unknown release: $v"
+  done
+  echo "MC_VERSION=${v}" >> .env
+  echo "pinned: ${v}"
+fi
+
+step "[6/8] Google Drive"
 if grep -qs "^\[${REMOTE}\]" config/rclone/rclone.conf; then
   echo "already configured"
 elif ask "Configure now?"; then
@@ -93,7 +114,7 @@ else
   echo "skipped (re-run to configure)"
 fi
 
-step "[6/7] World data"
+step "[7/8] World data"
 if sudo docker volume inspect "$VOLUME" >/dev/null 2>&1; then
   echo "volume exists, skipping"
 elif grep -qs "^\[${REMOTE}\]" config/rclone/rclone.conf; then
@@ -113,7 +134,7 @@ else
   echo "no restore, new world"
 fi
 
-step "[7/7] Start"
+step "[8/8] Start"
 sudo docker compose up -d --build
 
 echo
