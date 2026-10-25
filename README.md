@@ -27,6 +27,16 @@ Drive, optionally restores the latest world backup, then starts the stack.
 When migrating, stop the old host first (`docker compose down`) to avoid
 two hosts uploading to the same Drive folder.
 
+## Remote access (optional)
+
+```
+bash setup-tailscale.sh
+```
+
+Joins the Pi to a Tailscale tailnet so the panel is reachable from other
+networks without opening ports. The script also prints an access policy that
+lets shared users join the Minecraft server without reaching the panel.
+
 ## Usage
 
 | | |
