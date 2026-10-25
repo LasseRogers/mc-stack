@@ -1,0 +1,3 @@
+#!/bin/sh
+. "$(dirname "$0")/_log"
+echo "log2ram.service enabled"

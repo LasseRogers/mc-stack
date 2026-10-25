@@ -1,0 +1,2 @@
+# Sourced by the stubs: record the call for assertions.
+printf '%s %s\n' "$(basename "$0")" "$*" >> "${STUB_LOG:-/dev/null}"

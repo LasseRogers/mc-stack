@@ -18,3 +18,18 @@ jobs:
 
       - name: Run tests
         run: .venv/bin/pytest services/admin-panel
+
+  scripts:
+    name: Script tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install bats and shellcheck
+        run: sudo apt-get update && sudo apt-get install -y bats shellcheck
+
+      - name: shellcheck
+        run: shellcheck setup-pi.sh setup-tailscale.sh restore.sh services/backup-sync/*.sh
+
+      - name: bats
+        run: bats tests/

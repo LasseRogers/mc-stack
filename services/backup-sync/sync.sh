@@ -2,7 +2,7 @@
 # Upload local backups and prune old remote copies.
 set -eu
 
-SRC=/backups
+SRC="${SYNC_SRC:-/backups}"
 DEST="${SYNC_DEST:?SYNC_DEST is not set}"
 REMOTE="${DEST%%:*}"
 KEEP_DAYS="${REMOTE_KEEP_DAYS:-30}"
@@ -12,7 +12,7 @@ log() { echo "[backup-sync] $(date '+%Y-%m-%d %H:%M:%S') $*"; }
 fail() { log "$*"; alert.sh "$*" || true; exit 1; }
 
 # Prevent overlapping runs.
-exec 9>/tmp/sync.lock
+exec 9>"${TMPDIR:-/tmp}/sync.lock"
 if ! flock -n 9; then
   log "already running, skipping"
   exit 0

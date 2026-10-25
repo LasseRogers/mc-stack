@@ -1,0 +1,3 @@
+#!/bin/sh
+# Run the command as-is (supports "sudo VAR=value cmd").
+exec env "$@"

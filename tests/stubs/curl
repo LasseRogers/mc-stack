@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+. "$(dirname "$0")/_log"
+prev=""
+for a in "$@"; do
+  [ "$prev" = "-d" ] && printf '%s\n' "$a" >> "${STUB_LOG:-/dev/null}.body"
+  prev="$a"
+done
+case "$*" in
+  *piston-meta*)
+    echo '{"latest":{"release":"26.3","snapshot":"26.4-pre1"},"versions":[{"id":"26.4-pre1","type":"snapshot"},{"id":"26.3","type":"release"},{"id":"1.21.4","type":"release"}]}' ;;
+  *fail*) exit 22 ;;
+esac
+exit 0

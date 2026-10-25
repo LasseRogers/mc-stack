@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+. "$(dirname "$0")/_log"
+args="$*"
+last="${*: -1}"
+case "$args" in
+  "volume inspect"*)
+    [ "${STUB_VOLUME_EXISTS:-0}" = 1 ] ;;
+  *" lsf "*)
+    [ -n "${STUB_REMOTE_FILES:-}" ] && printf '%s\n' $STUB_REMOTE_FILES
+    exit 0 ;;
+  *"config create"*)
+    printf '[offsite]\ntype = drive\n' > config/rclone/rclone.conf ;;
+  *"rclone copy"* | *" copy offsite:"*)
+    src="${*: -2:1}"
+    touch "backups/${src##*/}" ;;
+  *"backup now"*)
+    [ -n "${STUB_BACKUP_NOW:-}" ] || exit 1
+    touch "backups/$STUB_BACKUP_NOW" ;;
+  *) exit 0 ;;
+esac

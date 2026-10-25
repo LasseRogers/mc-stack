@@ -1,0 +1,2 @@
+#!/bin/sh
+echo "${STUB_TZ:-Europe/Copenhagen}"

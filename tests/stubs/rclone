@@ -1,0 +1,6 @@
+#!/bin/sh
+. "$(dirname "$0")/_log"
+case "$1" in
+  listremotes) [ -n "${STUB_RCLONE_REMOTE:-}" ] && echo "${STUB_RCLONE_REMOTE}:" ;;
+  copy | delete) [ "${STUB_RCLONE_FAIL:-}" != "$1" ] ;;
+esac
