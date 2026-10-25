@@ -60,3 +60,23 @@ are set in `.env`. Run `docker compose up -d` after changing either.
 take a backup first).
 
 `.env` and `config/rclone/` contain secrets and are git-ignored.
+
+## Development
+
+Requires Python 3, shellcheck and bats:
+
+```
+sudo apt install -y python3-venv shellcheck bats
+python3 -m venv .venv
+.venv/bin/pip install -r services/admin-panel/requirements-dev.txt
+```
+
+Run the checks:
+
+```
+.venv/bin/pytest services/admin-panel
+shellcheck setup-pi.sh setup-tailscale.sh restore.sh services/backup-sync/*.sh
+bats tests/
+```
+
+The same checks run on every push via GitHub Actions.
