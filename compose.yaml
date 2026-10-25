@@ -17,7 +17,7 @@ services:
       EULA: "TRUE"
       VERSION: ${MC_VERSION:-LATEST}
       MEMORY: "2G"
-      TZ: Europe/Copenhagen
+      TZ: ${SERVER_TZ:-UTC}
       RCON_PASSWORD: ${RCON_PASSWORD}
     volumes:
       - mc-data:/data
@@ -36,7 +36,7 @@ services:
       mc:
         condition: service_healthy
     environment:
-      TZ: Europe/Copenhagen
+      TZ: ${SERVER_TZ:-UTC}
       RCON_HOST: mc
       RCON_PASSWORD: ${RCON_PASSWORD}
       BACKUP_INTERVAL: "6h"
@@ -70,7 +70,7 @@ services:
     depends_on:
       - backups
     environment:
-      TZ: Europe/Copenhagen
+      TZ: ${SERVER_TZ:-UTC}
       SYNC_DEST: "offsite:minecraft-backups"   # remote:path
       SYNC_SCHEDULE: "0 3 * * *"               # cron
       REMOTE_KEEP_DAYS: "30"                   # 0 = keep forever

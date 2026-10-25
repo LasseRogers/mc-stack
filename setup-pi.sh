@@ -86,6 +86,12 @@ EOF
   echo "written (mode 600)"
 fi
 
+if ! grep -q '^SERVER_TZ=' .env; then
+  tz="$(timedatectl show -p Timezone --value 2>/dev/null || cat /etc/timezone 2>/dev/null || true)"
+  echo "SERVER_TZ=${tz:-UTC}" >> .env
+  echo "time zone: ${tz:-UTC}"
+fi
+
 step "[6/10] Minecraft version"
 if grep -q '^MC_VERSION=' .env; then
   echo "pinned: $(grep '^MC_VERSION=' .env | cut -d= -f2)"
