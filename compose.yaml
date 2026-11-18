@@ -48,6 +48,7 @@ services:
     restart: unless-stopped
 
   panel:
+    image: ghcr.io/lasserogers/mc-stack-panel:latest
     build: ./services/admin-panel
     user: "1000:1000"   # same owner as the server data and backups/
     depends_on:
@@ -69,6 +70,7 @@ services:
     restart: unless-stopped
 
   backup-sync:
+    image: ghcr.io/lasserogers/mc-stack-backup-sync:latest
     build: ./services/backup-sync
     depends_on:
       - backups
