@@ -49,13 +49,15 @@ lets shared users join the Minecraft server without reaching the panel.
 | Upload now | `docker compose exec backup-sync sync.sh` |
 | Restore a backup | `bash restore.sh` |
 | Stop / start | `docker compose down` / `docker compose up -d` |
-| Update | `git pull && docker compose pull && docker compose up -d --build` |
+| Update | `git pull && docker compose pull && docker compose up -d` |
 
 Backup intervals, retention and memory are set in `compose.yaml`. The
 Minecraft version (`MC_VERSION`) and Discord webhook (`DISCORD_WEBHOOK_URL`)
 are set in `.env`. Run `docker compose up -d` after changing either.
 
-`docker compose pull` updates images but not Minecraft itself, which stays on
+`docker compose pull` updates all images, including `panel` and `backup-sync`,
+which CI builds and publishes to GHCR on every push to `main` (and weekly).
+It does not update Minecraft itself, which stays on
 `MC_VERSION`. To upgrade, change `MC_VERSION` (worlds can't be downgraded, so
 take a backup first).
 
@@ -80,3 +82,6 @@ bats tests/
 ```
 
 The same checks run on every push via GitHub Actions.
+
+To run local changes to `panel` or `backup-sync`, build them instead of
+pulling: `docker compose up -d --build`.
