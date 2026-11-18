@@ -22,7 +22,9 @@ env_value() { grep "^$1=" .env | cut -d= -f2-; }
   [ "$(env_value SERVER_TZ)" = "Europe/Copenhagen" ]
   [ "$(env_value MC_VERSION)" = "26.3" ]
   [ "$(env_value DISCORD_WEBHOOK_URL)" = "" ]
-  called "compose up -d --build"
+  called "compose pull"
+  called "compose up -d"
+  not_called "--build"
 }
 
 @test "asks again when the passwords don't match" {

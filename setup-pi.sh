@@ -184,7 +184,8 @@ else
 fi
 
 step "[10/10] Start"
-sudo docker compose up -d --build
+sudo docker compose pull
+sudo docker compose up -d
 
 echo
 echo "Minecraft: $(hostname).local"
